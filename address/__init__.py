@@ -1,1 +1,1 @@
-from .complete_zipcode import CompleteZipcode, zipcode
+from .complete_zipcode import *

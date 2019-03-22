@@ -1,37 +1,40 @@
 import re
 
-class Match:
-    def __init__( self, value, nextOffset ):
-        self.value = value
-        self.nextOffset = nextOffset
+class Result:
+    pass
+
+class Match(Result):
+    def __init__(self, value, remaining):
+        self.value     = value
+        self.remaining = remaining
     
-    def __repr__( self ):
-        return str( self.value ) + ' ending at ' + str( self.nextOffset )
+    def __repr__(self):
+        return "( " + str(self.value) + " )"
 
-class NoMatch:
-    def __repr__( self ):
-        return "! no match"
+class NoMatch(Result):
+    def __repr__(self):
+        return "()"
 
-def regexMatch( pattern ):
-    def parser( document, offset ):
-        match = re.match( '^' + pattern, document[offset:] )
+def regex(pattern):
+    def parser(document):
+        match = re.match('^' + pattern, document)
 
         if match is None:
             return NoMatch()
         
-        if match.start( 0 ) != 0:
+        if match.start(0) != 0:
             return NoMatch()
         
-        return Match( match.group( 0 ), offset + match.end( 0 ) )
+        return Match(match.group(0), document[match.end(0):])
 
     return parser
 
-def choice( *parsers ):
-    def parser( document, offset ):
+def choice(*parsers):
+    def parser(document):
         for p in parsers:
-            match = p( document, offset )
+            match = p(document)
 
-            if isinstance( match, Match ):
+            if isinstance(match, Match):
                 return match
         
         return NoMatch()
@@ -46,11 +49,11 @@ def choice( *parsers ):
 #   - return a new match with the transformed value
 #   - but if it errors with an exception, make it fail the parse
 ###
-def map( parser, transformer ):
-    def transformed( document, offset ):
-        match = parser( document, offset )
+def map(parser, transformer):
+    def transformed(document):
+        match = parser(document)
 
-        if isinstance( match, NoMatch ):
+        if not isinstance(match, Match):
             return NoMatch()
         
         try:
@@ -58,7 +61,7 @@ def map( parser, transformer ):
             # even `None` and `False` - consider
             # for instance a JSON parser, which
             # could contain these values
-            new_value = transformer( match.value )
+            new_value = transformer(match.value)
         except Exception as e:
             # Uncomment to raise error
             # raise e
@@ -69,39 +72,39 @@ def map( parser, transformer ):
             # only exist at runtime
             return NoMatch()
 
-        return Match( new_value, match.nextOffset )
+        return Match(new_value, match.remaining)
 
     return transformed
 
-def seq( *parsers ):
-    def parser( document, offset ):
+def seq(*parsers):
+    def parser(document):
         matches = []
-        nextOffset = offset
+        remaining = document
 
         for p in parsers:
-            match = p( document, nextOffset )
+            match = p(remaining)
 
-            if isinstance( match, NoMatch ):
+            if not isinstance(match, Match):
                 return NoMatch()
             
-            matches.append( match.value )
-            nextOffset = match.nextOffset
+            matches.append(match.value)
+            remaining = match.remaining
         
-        return Match( matches, nextOffset )
+        return Match(matches, remaining)
     
     return parser
 
 ### Common parsers
 
-def char( c ):
-    def parser( document, offset ):
-        if len( document ) <= offset or c == document[ offset ]:
-            return Match( c, offset + 1 )
-        else:
+def char(c):
+    def parser(document):
+        if len(document) == 0 or c != document[0]:
             return NoMatch()
+        else:
+            return Match(c, document[1:])
     
     return parser
 
-digits = regexMatch( r'\d+' )
+digits = regex(r'\d+')
 
-natural_number = map( digits, int )
+natural_number = map(digits, int) 
