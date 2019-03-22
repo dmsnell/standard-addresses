@@ -1,7 +1,13 @@
 import unittest
 import combinators as P
 
-class CompleteZipcode:
+from . import Element, standard
+
+@standard()
+class CompleteZipcode(Element):
+    def parse(document):
+        return zipcode(document)
+
     def __init__(self, zip5, zip4 = None):
         self.zip5 = zip5
         self.zip4 = zip4
@@ -28,7 +34,7 @@ zipcode = P.choice(
     P.map(zip5, CompleteZipcode)
 )
 
-class TestZipcodeParser(unittest.TestCase):
+class TestCompleteZipcode(unittest.TestCase):
     def test_matches_five_digits(self):
         self.assertIsInstance(zip5("12345"), P.Match)
 

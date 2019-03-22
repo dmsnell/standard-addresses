@@ -1,3 +1,4 @@
+from functools import wraps
 import re
 
 class Result:
@@ -87,14 +88,83 @@ def seq(*parsers):
             if not isinstance(match, Match):
                 return NoMatch()
             
-            matches.append(match.value)
+            if match.value is not None:
+                matches.append(match.value)
+
             remaining = match.remaining
         
         return Match(matches, remaining)
     
     return parser
 
+def skip(parser):
+    @wraps(parser)
+    def skipped(document):
+        return map(parser, lambda v: None)
+    
+    return skipped
+
+def pos(parser):
+    @wraps(parser)
+    def positive_lookahead(document):
+        match = parser(document)
+
+        if isinstance(match, Match):
+            return Match(None, document)
+        else:
+            return NoMatch()
+    
+    return positive_lookahead
+
+def neg(parser):
+    @wraps(parser)
+    def negative_lookahead(document):
+        match = parser(document)
+
+        if isinstance(match, NoMatch):
+            return Match(None, document)
+        else:
+            return NoMatch()
+    
+    return negative_lookahead
+
+def many(parser):
+    @wraps(parser)
+    def many_parser(document):
+        value = []
+        remaining = document
+
+        while True:
+            match = parser(remaining)
+
+            if not isinstance(match, Match):
+                break
+            
+            value.append(match.value)
+            remaining = match.remaining
+        
+        return Match(value, remaining)
+
+    return many_parser
+
+### Common mappers
+
+def first(parser):
+    return map(parser, lambda vs: vs[0])
+
+def second(parser):
+    return map(parser, lambda vs: vs[1])
+
+def flattenString(parser):
+    return map(parser, lambda cs: ''.join(cs))
+
 ### Common parsers
+
+def any(document):
+    if len(document) > 0:
+        return Match(document[0], document[1:])
+    else:
+        return NoMatch()
 
 def char(c):
     def parser(document):

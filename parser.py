@@ -21,7 +21,9 @@ if "__main__" == __name__:
     document = "123 Main Street, Buffalo Lake, MN 55314"
 
     print(myParser(document))
-    print(A.zipcode("25000-0440"))
-    print(A.zipcode("00400-0001"))
-    print(A.zipcode("85716"))
+    print(A.CompleteZipcode.parse("25000-0440"))
+    print(A.CompleteZipcode.parse("00400-0001"))
+    print(A.CompleteZipcode.parse("85716"))
 
+    print(A.AddressNumberPrefix.__name__) 
+    print(A.AddressNumberPrefix.Examples)
