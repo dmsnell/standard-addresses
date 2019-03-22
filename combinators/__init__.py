@@ -10,11 +10,11 @@ class Match(Result):
         self.remaining = remaining
     
     def __repr__(self):
-        return "( " + str(self.value) + " )"
+        return "Match<" + str(self.value) + ">"
 
 class NoMatch(Result):
     def __repr__(self):
-        return "()"
+        return "NoMatch<>"
 
 def regex(pattern):
     def parser(document):
@@ -98,11 +98,7 @@ def seq(*parsers):
     return parser
 
 def skip(parser):
-    @wraps(parser)
-    def skipped(document):
-        return map(parser, lambda v: None)
-    
-    return skipped
+    return map(parser, lambda v: None)
 
 def pos(parser):
     @wraps(parser)

@@ -1,5 +1,5 @@
 import unittest
-from combinators import Match, NoMatch, any as p_any, char, choice, digits as p_digits, first, flattenString, many, map, neg as p_neg, pos as p_pos, seq
+from combinators import Match, NoMatch, any as p_any, char, choice, digits as p_digits, first, flattenString, many, map as p_map, neg as p_neg, pos as p_pos, seq
 
 from . import Element, standard
 
@@ -22,8 +22,9 @@ from . import Element, standard
     Section="2.2.1.1"
 )
 class AddressNumberPrefix(Element):
+    @staticmethod
     def parse(*kargs, **kwargs):
-        return address_number_prefix(*kargs, **kwargs)
+        return p_map(address_number_prefix, AddressNumberPrefix)(*kargs, **kwargs)
 
     def __init__(self, prefix):
         self.prefix = prefix
@@ -103,4 +104,4 @@ class TestAddressNumberPrefix(unittest.TestCase):
         self.assertEqual(p.remaining, '4 ')
 
     def test_examples(self):
-        AddressNumberPrefix.test_examples(self)
+        AddressNumberPrefix.test_examples(self, lambda m: m.prefix)

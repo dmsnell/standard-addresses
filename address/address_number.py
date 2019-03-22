@@ -20,14 +20,16 @@ from . import Element, standard
     Section="2.2.1.2"
 )
 class AddressNumber(Element):
-    parse = P.natural_number
+    @staticmethod
+    def parse(document):
+        return P.map(P.natural_number, AddressNumber)(document)
 
-    def __init__(self, prefix):
-        self.prefix = prefix
+    def __init__(self, number):
+        self.number = number
     
     def __repr__(self):
-        return self.prefix
+        return self.number
 
 class TestAddressNumber(unittest.TestCase):
     def test_examples(self):
-        AddressNumber.test_examples(self)
+        AddressNumber.test_examples(self, lambda m: m.number)
